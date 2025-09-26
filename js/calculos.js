@@ -68,27 +68,28 @@ class CalculosEletricos {
         const qd_number = this.gerarNumeroQD();
         
         // Retornar dados no formato correto (igual ao Python)
+        // No calculos.js, altere o retorno da função calcularDimensionamento:
         return {
-            "N°": `QD-${qd_number}`,
-            "DESCRIÇÃO": nomeQuadro,
-            "ATIVA-R": pr,
-            "ATIVA-S": ps,
-            "ATIVA-T": pt,
-            "DEM-R": this.calcularDemanda(pr, fd),
-            "DEM-S": this.calcularDemanda(ps, fd),
-            "DEM-T": this.calcularDemanda(pt, fd),
+            "N": `QD-${qd_number}`,
+            "DESCRICAO": nomeQuadro,
+            "ATIVA_R": pr,
+            "ATIVA_S": ps,
+            "ATIVA_T": pt,
+            "DEM_R": this.calcularDemanda(pr, fd),
+            "DEM_S": this.calcularDemanda(ps, fd),
+            "DEM_T": this.calcularDemanda(pt, fd),
             "R": this.arredondarCorrente(c_qds[0]),
             "S": this.arredondarCorrente(c_qds[1]),
             "T": this.arredondarCorrente(c_qds[2]),
             "FP": fp,
             "FD": fd,
-            "TENSÃO FASE (V)": tensao,
-            "TENSÃO LINHA (V)": tensao_linha,
-            "POT. TOTAL (W)": sum_pot,
-            "DEM. TOTAL (VA)": this.calcularDemandaTotal(sum_pot, fd, fp),
-            "COR. MÉDIA (A)": this.arredondarCorrente(c_med),
-            "DIST.(M)": dist,
-            "QUEDA DE TENSÃO (%)": dimensionamentoCabos.queda,
+            "TENSAO_FASE_V": tensao,
+            "TENSAO_LINHA_V": tensao_linha,
+            "POT_TOTAL_W": sum_pot,
+            "DEM_TOTAL_VA": this.calcularDemandaTotal(sum_pot, fd, fp),
+            "COR_MEDIA_A": this.arredondarCorrente(c_med),
+            "DIST_M": dist,
+            "QUEDA_TENSAO_PERC": dimensionamentoCabos.queda,
             "FA": dimensionamentoCabos.cabo,
             "NE": dimensionamentoCabos.cabo,
             "TE": dimensionamentoCabos.terra,
@@ -366,4 +367,5 @@ function analisarSistema(dadosQuadros) {
 function verificarConformidadeQuadro(dadosQuadro) {
     const calculadora = new CalculosEletricos();
     return calculadora.verificarConformidade(dadosQuadro);
+
 }
