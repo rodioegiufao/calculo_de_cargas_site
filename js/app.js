@@ -38,34 +38,52 @@ class DimensionamentoEletricoApp {
     // Inicializar todos os eventos
     inicializarEventos() {
         // Formulário de cálculo
-        document.getElementById('form-calculo').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.processarCalculo();
-        });
+        const formCalculo = document.getElementById('form-calculo');
+        if (formCalculo) {
+            formCalculo.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.processarCalculo();
+            });
+        }
 
         // Exportação para Excel
-        document.getElementById('export-excel').addEventListener('click', () => {
-            this.exportarParaExcel();
-        });
+        const exportExcel = document.getElementById('export-excel');
+        if (exportExcel) {
+            exportExcel.addEventListener('click', () => {
+                this.exportarParaExcel();
+            });
+        }
 
         // Exclusão de quadros
-        document.getElementById('delete-selected').addEventListener('click', () => {
-            this.excluirQuadroSelecionado();
-        });
+        const deleteSelected = document.getElementById('delete-selected');
+        if (deleteSelected) {
+            deleteSelected.addEventListener('click', () => {
+                this.excluirQuadroSelecionado();
+            });
+        }
 
-        document.getElementById('delete-all').addEventListener('click', () => {
-            this.excluirTodosQuadros();
-        });
+        const deleteAll = document.getElementById('delete-all');
+        if (deleteAll) {
+            deleteAll.addEventListener('click', () => {
+                this.excluirTodosQuadros();
+            });
+        }
 
         // Atualizar seletor de quadros quando mudar de aba
-        document.getElementById('data-tab').addEventListener('click', () => {
-            this.atualizarSeletorQuadros();
-        });
+        const dataTab = document.getElementById('data-tab');
+        if (dataTab) {
+            dataTab.addEventListener('click', () => {
+                this.atualizarSeletorQuadros();
+            });
+        }
 
         // Atualizar visualizações quando mudar para aba de visualização
-        document.getElementById('view-tab').addEventListener('click', () => {
-            this.atualizarVisualizacoes();
-        });
+        const viewTab = document.getElementById('view-tab');
+        if (viewTab) {
+            viewTab.addEventListener('click', () => {
+                this.atualizarVisualizacoes();
+            });
+        }
     }
 
     // Processar cálculo do formulário
@@ -78,7 +96,7 @@ class DimensionamentoEletricoApp {
 
         // Verificar se o nome do quadro já existe
         if (this.nomeQuadroExiste(formData.nomeQuadro)) {
-            this.mostrarNotificacao(`Já existe um quadro com o nome '${formData.nomeQuadro}'. Use um nome diferente.`, 'error');
+            this.mostrarNotificacao('Ja existe um quadro com o nome "' + formData.nomeQuadro + '". Use um nome diferente.', 'error');
             return;
         }
 
@@ -99,7 +117,7 @@ class DimensionamentoEletricoApp {
         
         // Salvar dados
         if (this.salvarDados()) {
-            this.mostrarNotificacao('Cálculo realizado e salvo com sucesso!', 'success');
+            this.mostrarNotificacao('Calculo realizado e salvo com sucesso!', 'success');
             this.mostrarResultadoCalculo(resultado);
             this.limparFormulario();
             this.atualizarInterface();
@@ -128,12 +146,12 @@ class DimensionamentoEletricoApp {
         }
 
         if (data.distancia <= 0) {
-            this.mostrarNotificacao('A distância deve ser maior que zero.', 'error');
+            this.mostrarNotificacao('A distancia deve ser maior que zero.', 'error');
             return false;
         }
 
         if (data.potenciaR === 0 && data.potenciaS === 0 && data.potenciaT === 0) {
-            this.mostrarNotificacao('Informe pelo menos uma potência (R, S ou T).', 'error');
+            this.mostrarNotificacao('Informe pelo menos uma potencia (R, S ou T).', 'error');
             return false;
         }
 
@@ -143,7 +161,7 @@ class DimensionamentoEletricoApp {
     // Verificar se nome do quadro já existe
     nomeQuadroExiste(nome) {
         return this.dadosQuadros.some(quadro => 
-            quadro.DESCRIÇÃO.toLowerCase() === nome.toLowerCase()
+            quadro.DESCRICAO.toLowerCase() === nome.toLowerCase()
         );
     }
 
@@ -152,36 +170,40 @@ class DimensionamentoEletricoApp {
         const card = document.getElementById('resultado-card');
         const content = document.getElementById('resultado-detailed');
 
-        content.innerHTML = `
-            <div class="row">
-                <div class="col-md-6">
-                    <h6>Informações Básicas</h6>
-                    <table class="table table-sm">
-                        <tr><td><strong>Quadro:</strong></td><td>${resultado.DESCRIÇÃO}</td></tr>
-                        <tr><td><strong>Potência Total:</strong></td><td>${resultado['POT. TOTAL (W)'].toLocaleString()} W</td></tr>
-                        <tr><td><strong>Demanda Total:</strong></td><td>${resultado['DEM. TOTAL (VA)'].toLocaleString()} VA</td></tr>
-                        <tr><td><strong>Corrente Média:</strong></td><td>${resultado['COR. MÉDIA (A)'].toFixed(2)} A</td></tr>
-                    </table>
-                </div>
-                <div class="col-md-6">
-                    <h6>Dimensionamento</h6>
-                    <table class="table table-sm">
-                        <tr><td><strong>Condutor Fase:</strong></td><td>${resultado.FA}</td></tr>
-                        <tr><td><strong>Condutor Neutro:</strong></td><td>${resultado.NE}</td></tr>
-                        <tr><td><strong>Condutor Terra:</strong></td><td>${resultado.TE} mm²</td></tr>
-                        <tr><td><strong>Disjuntor:</strong></td><td>${resultado.DISJUNTOR} A</td></tr>
-                        <tr><td><strong>Queda de Tensão:</strong></td><td>${resultado['QUEDA DE TENSÃO (%)'].toFixed(2)}%</td></tr>
-                    </table>
-                </div>
-            </div>
-        `;
+        if (!card || !content) return;
+
+        content.innerHTML = 
+            '<div class="row">' +
+                '<div class="col-md-6">' +
+                    '<h6>Informacoes Basicas</h6>' +
+                    '<table class="table table-sm">' +
+                        '<tr><td><strong>Quadro:</strong></td><td>' + resultado.DESCRICAO + '</td></tr>' +
+                        '<tr><td><strong>Potencia Total:</strong></td><td>' + resultado['POT_TOTAL_W'].toLocaleString() + ' W</td></tr>' +
+                        '<tr><td><strong>Demanda Total:</strong></td><td>' + resultado['DEM_TOTAL_VA'].toLocaleString() + ' VA</td></tr>' +
+                        '<tr><td><strong>Corrente Media:</strong></td><td>' + resultado['COR_MEDIA_A'].toFixed(2) + ' A</td></tr>' +
+                    '</table>' +
+                '</div>' +
+                '<div class="col-md-6">' +
+                    '<h6>Dimensionamento</h6>' +
+                    '<table class="table table-sm">' +
+                        '<tr><td><strong>Condutor Fase:</strong></td><td>' + resultado.FA + '</td></tr>' +
+                        '<tr><td><strong>Condutor Neutro:</strong></td><td>' + resultado.NE + '</td></tr>' +
+                        '<tr><td><strong>Condutor Terra:</strong></td><td>' + resultado.TE + ' mm²</td></tr>' +
+                        '<tr><td><strong>Disjuntor:</strong></td><td>' + resultado.DISJUNTOR + ' A</td></tr>' +
+                        '<tr><td><strong>Queda de Tensao:</strong></td><td>' + resultado['QUEDA_TENSAO_PERC'].toFixed(2) + '%</td></tr>' +
+                    '</table>' +
+                '</div>' +
+            '</div>';
 
         card.classList.remove('d-none');
     }
 
     // Limpar formulário
     limparFormulario() {
-        document.getElementById('form-calculo').reset();
+        const form = document.getElementById('form-calculo');
+        if (form) {
+            form.reset();
+        }
         document.getElementById('potencia-r').value = '';
         document.getElementById('potencia-s').value = '';
         document.getElementById('potencia-t').value = '';
@@ -199,6 +221,8 @@ class DimensionamentoEletricoApp {
         const noDataAlert = document.getElementById('no-data-alert');
         const dataContent = document.getElementById('data-content');
 
+        if (!noDataAlert || !dataContent) return;
+
         if (this.dadosQuadros.length === 0) {
             noDataAlert.classList.remove('d-none');
             dataContent.classList.add('d-none');
@@ -215,6 +239,8 @@ class DimensionamentoEletricoApp {
         const savedDataContent = document.getElementById('saved-data-content');
         const tableBody = document.getElementById('data-table-body');
 
+        if (!noSavedData || !savedDataContent || !tableBody) return;
+
         if (this.dadosQuadros.length === 0) {
             noSavedData.classList.remove('d-none');
             savedDataContent.classList.add('d-none');
@@ -229,50 +255,51 @@ class DimensionamentoEletricoApp {
 
     // Criar linha da tabela
     criarLinhaTabela(quadro, index) {
-        return `
-            <tr>
-                <td>${quadro.N°}</td>
-                <td>${quadro.DESCRIÇÃO}</td>
-                <td>${quadro['ATIVA-R']}</td>
-                <td>${quadro['ATIVA-S']}</td>
-                <td>${quadro['ATIVA-T']}</td>
-                <td>${quadro['DEM-R']}</td>
-                <td>${quadro['DEM-S']}</td>
-                <td>${quadro['DEM-T']}</td>
-                <td>${quadro.R.toFixed(2)}</td>
-                <td>${quadro.S.toFixed(2)}</td>
-                <td>${quadro.T.toFixed(2)}</td>
-                <td>${quadro.FP}</td>
-                <td>${quadro.FD}</td>
-                <td>${quadro['TENSÃO FASE (V)']}</td>
-                <td>${quadro['TENSÃO LINHA (V)']}</td>
-                <td>${quadro['POT. TOTAL (W)'].toLocaleString()}</td>
-                <td>${quadro['DEM. TOTAL (VA)'].toLocaleString()}</td>
-                <td>${quadro['COR. MÉDIA (A)'].toFixed(2)}</td>
-                <td>${quadro['DIST.(M)']}</td>
-                <td>${quadro['QUEDA DE TENSÃO (%)'].toFixed(2)}</td>
-                <td>${quadro.FA}</td>
-                <td>${quadro.NE}</td>
-                <td>${quadro.TE}</td>
-                <td>${quadro.DISJUNTOR}</td>
-                <td>
-                    <button class="btn btn-sm btn-danger" onclick="app.excluirQuadro(${index})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
+        return '' +
+            '<tr>' +
+                '<td>' + quadro.N + '</td>' +
+                '<td>' + quadro.DESCRICAO + '</td>' +
+                '<td>' + quadro.ATIVA_R + '</td>' +
+                '<td>' + quadro.ATIVA_S + '</td>' +
+                '<td>' + quadro.ATIVA_T + '</td>' +
+                '<td>' + quadro.DEM_R + '</td>' +
+                '<td>' + quadro.DEM_S + '</td>' +
+                '<td>' + quadro.DEM_T + '</td>' +
+                '<td>' + quadro.R.toFixed(2) + '</td>' +
+                '<td>' + quadro.S.toFixed(2) + '</td>' +
+                '<td>' + quadro.T.toFixed(2) + '</td>' +
+                '<td>' + quadro.FP + '</td>' +
+                '<td>' + quadro.FD + '</td>' +
+                '<td>' + quadro.TENSAO_FASE_V + '</td>' +
+                '<td>' + quadro.TENSAO_LINHA_V + '</td>' +
+                '<td>' + quadro.POT_TOTAL_W.toLocaleString() + '</td>' +
+                '<td>' + quadro.DEM_TOTAL_VA.toLocaleString() + '</td>' +
+                '<td>' + quadro.COR_MEDIA_A.toFixed(2) + '</td>' +
+                '<td>' + quadro.DIST_M + '</td>' +
+                '<td>' + quadro.QUEDA_TENSAO_PERC.toFixed(2) + '</td>' +
+                '<td>' + quadro.FA + '</td>' +
+                '<td>' + quadro.NE + '</td>' +
+                '<td>' + quadro.TE + '</td>' +
+                '<td>' + quadro.DISJUNTOR + '</td>' +
+                '<td>' +
+                    '<button class="btn btn-sm btn-danger" onclick="app.excluirQuadro(' + index + ')">' +
+                        '<i class="fas fa-trash"></i>' +
+                    '</button>' +
+                '</td>' +
+            '</tr>';
     }
 
     // Atualizar seletor de quadros
     atualizarSeletorQuadros() {
         const select = document.getElementById('quadro-select');
+        if (!select) return;
+        
         select.innerHTML = '<option value="">Selecione um quadro para excluir</option>';
         
         this.dadosQuadros.forEach((quadro, index) => {
             const option = document.createElement('option');
             option.value = index;
-            option.textContent = quadro.DESCRIÇÃO;
+            option.textContent = quadro.DESCRICAO;
             select.appendChild(option);
         });
     }
@@ -292,20 +319,25 @@ class DimensionamentoEletricoApp {
 
     // Atualizar métricas principais
     atualizarMetricas() {
-        const potenciaTotal = this.dadosQuadros.reduce((sum, q) => sum + q['POT. TOTAL (W)'], 0);
-        const demandaTotal = this.dadosQuadros.reduce((sum, q) => sum + q['DEM. TOTAL (VA)'], 0);
-        const correnteMedia = this.dadosQuadros.reduce((sum, q) => sum + q['COR. MÉDIA (A)'], 0) / this.dadosQuadros.length;
+        const potenciaTotal = this.dadosQuadros.reduce((sum, q) => sum + q.POT_TOTAL_W, 0);
+        const demandaTotal = this.dadosQuadros.reduce((sum, q) => sum + q.DEM_TOTAL_VA, 0);
+        const correnteMedia = this.dadosQuadros.reduce((sum, q) => sum + q.COR_MEDIA_A, 0) / this.dadosQuadros.length;
 
-        document.getElementById('total-power').textContent = `${potenciaTotal.toLocaleString()} W`;
-        document.getElementById('total-demand').textContent = `${demandaTotal.toLocaleString()} VA`;
-        document.getElementById('avg-current').textContent = `${correnteMedia.toFixed(2)} A`;
+        const totalPower = document.getElementById('total-power');
+        const totalDemand = document.getElementById('total-demand');
+        const avgCurrent = document.getElementById('avg-current');
+
+        if (totalPower) totalPower.textContent = potenciaTotal.toLocaleString() + ' W';
+        if (totalDemand) totalDemand.textContent = demandaTotal.toLocaleString() + ' VA';
+        if (avgCurrent) avgCurrent.textContent = correnteMedia.toFixed(2) + ' A';
 
         // Calcular subestação recomendada
         const demandaKVA = demandaTotal / 1000;
         const subestacoes = [75, 112.5, 225, 300, 500, 750, 1000, 1250, 1500, 1750, 2000];
         const subestacaoRecomendada = subestacoes.find(s => s >= demandaKVA) || subestacoes[subestacoes.length - 1];
         
-        document.getElementById('recommended-sub').textContent = `${subestacaoRecomendada} kVA`;
+        const recommendedSub = document.getElementById('recommended-sub');
+        if (recommendedSub) recommendedSub.textContent = subestacaoRecomendada + ' kVA';
     }
 
     // Exportar para Excel
@@ -333,6 +365,8 @@ class DimensionamentoEletricoApp {
     // Excluir quadro selecionado
     excluirQuadroSelecionado() {
         const select = document.getElementById('quadro-select');
+        if (!select) return;
+        
         const index = parseInt(select.value);
         
         if (isNaN(index)) {
@@ -348,12 +382,12 @@ class DimensionamentoEletricoApp {
         const quadro = this.dadosQuadros[index];
         
         this.mostrarModalConfirmacao(
-            `Deseja realmente excluir o quadro "${quadro.DESCRIÇÃO}"?`,
+            'Deseja realmente excluir o quadro "' + quadro.DESCRICAO + '"?',
             () => {
                 this.dadosQuadros.splice(index, 1);
                 this.salvarDados();
                 this.atualizarInterface();
-                this.mostrarNotificacao('Quadro excluído com sucesso!', 'success');
+                this.mostrarNotificacao('Quadro excluido com sucesso!', 'success');
             }
         );
     }
@@ -361,17 +395,17 @@ class DimensionamentoEletricoApp {
     // Excluir todos os quadros
     excluirTodosQuadros() {
         if (this.dadosQuadros.length === 0) {
-            this.mostrarNotificacao('Não há dados para excluir.', 'warning');
+            this.mostrarNotificacao('Nao ha dados para excluir.', 'warning');
             return;
         }
 
         this.mostrarModalConfirmacao(
-            'Deseja realmente excluir TODOS os quadros? Esta ação é irreversível!',
+            'Deseja realmente excluir TODOS os quadros? Esta acao e irreversivel!',
             () => {
                 this.dadosQuadros = [];
                 this.salvarDados();
                 this.atualizarInterface();
-                this.mostrarNotificacao('Todos os quadros foram excluídos!', 'success');
+                this.mostrarNotificacao('Todos os quadros foram excluidos!', 'success');
             }
         );
     }
@@ -381,6 +415,8 @@ class DimensionamentoEletricoApp {
         const modalBody = document.getElementById('confirmModalBody');
         const confirmButton = document.getElementById('confirmAction');
         
+        if (!modalBody || !confirmButton) return;
+        
         modalBody.textContent = mensagem;
         
         // Remover listeners anteriores
@@ -389,10 +425,15 @@ class DimensionamentoEletricoApp {
         
         newConfirmButton.addEventListener('click', () => {
             callback();
-            bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+            if (modal) modal.hide();
         });
         
-        new bootstrap.Modal(document.getElementById('confirmModal')).show();
+        const modalElement = document.getElementById('confirmModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        }
     }
 
     // Mostrar notificação
@@ -406,12 +447,11 @@ class DimensionamentoEletricoApp {
         }[tipo] || 'alert-info';
 
         const alertDiv = document.createElement('div');
-        alertDiv.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+        alertDiv.className = 'alert ' + alertClass + ' alert-dismissible fade show position-fixed';
         alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-        alertDiv.innerHTML = `
-            ${mensagem}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
+        alertDiv.innerHTML = 
+            mensagem +
+            '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
 
         document.body.appendChild(alertDiv);
 
