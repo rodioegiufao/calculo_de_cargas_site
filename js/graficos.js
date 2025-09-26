@@ -29,7 +29,7 @@ class GerenciadorGraficos {
             return;
         }
 
-        const analise = analisarSistema(dadosQuadros);
+        const analise = this.calcularAnaliseSistema(dadosQuadros);
         
         this.atualizarGraficoPotenciaDemanda(analise);
         this.atualizarGraficoCorrente(analise);
@@ -37,11 +37,78 @@ class GerenciadorGraficos {
         this.atualizarGraficoSubestacao(analise, dadosQuadros);
     }
 
+    // Calcular análise do sistema (função movida para cá)
+    calcularAnaliseSistema(dadosQuadros) {
+        if (!dadosQuadros || dadosQuadros.length === 0) {
+            return null;
+        }
+
+        const totais = {
+            potenciaR: 0,
+            potenciaS: 0,
+            potenciaT: 0,
+            demandaR: 0,
+            demandaS: 0,
+            demandaT: 0,
+            correnteR: 0,
+            correnteS: 0,
+            correnteT: 0,
+            potenciaTotal: 0,
+            demandaTotal: 0,
+            correnteMediaTotal: 0
+        };
+
+        dadosQuadros.forEach(quadro => {
+            totais.potenciaR += quadro.ATIVA_R;
+            totais.potenciaS += quadro.ATIVA_S;
+            totais.potenciaT += quadro.ATIVA_T;
+            
+            totais.demandaR += quadro.DEM_R;
+            totais.demandaS += quadro.DEM_S;
+            totais.demandaT += quadro.DEM_T;
+            
+            totais.correnteR += quadro.R;
+            totais.correnteS += quadro.S;
+            totais.correnteT += quadro.T;
+            
+            totais.potenciaTotal += quadro.POT_TOTAL_W;
+            totais.demandaTotal += quadro.DEM_TOTAL_VA;
+            totais.correnteMediaTotal += quadro.COR_MEDIA_A;
+        });
+
+        totais.correnteMediaTotal /= dadosQuadros.length;
+
+        // Calcular desbalanceamento
+        const demandas = [totais.demandaR, totais.demandaS, totais.demandaT];
+        const demandaMaxima = Math.max(...demandas);
+        const demandaMedia = (totais.demandaR + totais.demandaS + totais.demandaT) / 3;
+        const desbalanceamento = ((demandaMaxima - demandaMedia) / demandaMedia) * 100;
+
+        // Subestação recomendada
+        const demandaKVA = totais.demandaTotal / 1000;
+        const subestacoes = [75, 112.5, 225, 300, 500, 750, 1000, 1250, 1500, 1750, 2000];
+        const subestacaoRecomendada = subestacoes.find(s => s >= demandaKVA) || subestacoes[subestacoes.length - 1];
+
+        return {
+            ...totais,
+            desbalanceamento: Math.round(desbalanceamento * 100) / 100,
+            demandaKVA: Math.round(demandaKVA * 100) / 100,
+            subestacaoRecomendada,
+            demandaMaximaFase: demandaMaxima,
+            fases: {
+                R: { potencia: totais.potenciaR, demanda: totais.demandaR, corrente: totais.correnteR },
+                S: { potencia: totais.potenciaS, demanda: totais.demandaS, corrente: totais.correnteS },
+                T: { potencia: totais.potenciaT, demanda: totais.demandaT, corrente: totais.correnteT }
+            }
+        };
+    }
+
     // Gráfico de Potência vs Demanda por Fase
     criarGraficoPotenciaDemanda() {
-        const ctx = document.getElementById('powerChart').getContext('2d');
+        const ctx = document.getElementById('powerChart');
+        if (!ctx) return;
         
-        this.graficos.potenciaDemanda = new Chart(ctx, {
+        this.graficos.potenciaDemanda = new Chart(ctx.getContext('2d'), {
             type: 'bar',
             data: {
                 labels: ['Fase R', 'Fase S', 'Fase T'],
@@ -76,7 +143,7 @@ class GerenciadorGraficos {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return `${context.dataset.label}: ${context.parsed.y.toLocaleString('pt-BR')} ${context.dataset.label.includes('Potência') ? 'kW' : 'kVA'}`;
+                                return context.dataset.label + ': ' + context.parsed.y.toLocaleString('pt-BR') + ' ' + (context.dataset.label.includes('Potência') ? 'kW' : 'kVA');
                             }
                         }
                     }
@@ -111,9 +178,10 @@ class GerenciadorGraficos {
 
     // Gráfico de Corrente por Fase
     criarGraficoCorrente() {
-        const ctx = document.getElementById('currentChart').getContext('2d');
+        const ctx = document.getElementById('currentChart');
+        if (!ctx) return;
         
-        this.graficos.corrente = new Chart(ctx, {
+        this.graficos.corrente = new Chart(ctx.getContext('2d'), {
             type: 'bar',
             data: {
                 labels: ['Fase R', 'Fase S', 'Fase T'],
@@ -147,7 +215,7 @@ class GerenciadorGraficos {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return `Corrente: ${context.parsed.y.toLocaleString('pt-BR', {maximumFractionDigits: 2})} A`;
+                                return 'Corrente: ' + context.parsed.y.toLocaleString('pt-BR', {maximumFractionDigits: 2}) + ' A';
                             }
                         }
                     }
@@ -167,9 +235,10 @@ class GerenciadorGraficos {
 
     // Gráfico de Queda de Tensão por Circuito
     criarGraficoQuedaTensao() {
-        const ctx = document.getElementById('voltageDropChart').getContext('2d');
+        const ctx = document.getElementById('voltageDropChart');
+        if (!ctx) return;
         
-        this.graficos.quedaTensao = new Chart(ctx, {
+        this.graficos.quedaTensao = new Chart(ctx.getContext('2d'), {
             type: 'bar',
             data: {
                 labels: [],
@@ -192,7 +261,7 @@ class GerenciadorGraficos {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return `Queda: ${context.parsed.y.toLocaleString('pt-BR', {maximumFractionDigits: 2})}%`;
+                                return 'Queda: ' + context.parsed.y.toLocaleString('pt-BR', {maximumFractionDigits: 2}) + '%';
                             }
                         }
                     }
@@ -213,9 +282,10 @@ class GerenciadorGraficos {
 
     // Gráfico de Dimensionamento da Subestação
     criarGraficoSubestacao() {
-        const ctx = document.getElementById('substationChart').getContext('2d');
+        const ctx = document.getElementById('substationChart');
+        if (!ctx) return;
         
-        this.graficos.subestacao = new Chart(ctx, {
+        this.graficos.subestacao = new Chart(ctx.getContext('2d'), {
             type: 'bar',
             data: {
                 labels: [],
@@ -249,12 +319,9 @@ class GerenciadorGraficos {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return `${context.dataset.label}: ${context.parsed.x.toLocaleString('pt-BR')} kVA`;
+                                return context.dataset.label + ': ' + context.parsed.x.toLocaleString('pt-BR') + ' kVA';
                             }
                         }
-                    },
-                    annotation: {
-                        annotations: {}
                     }
                 },
                 scales: {
@@ -272,7 +339,7 @@ class GerenciadorGraficos {
 
     // Atualizar gráfico de Potência vs Demanda
     atualizarGraficoPotenciaDemanda(analise) {
-        if (!analise) return;
+        if (!analise || !this.graficos.potenciaDemanda) return;
 
         const potencias = [
             analise.fases.R.potencia / 1000,
@@ -293,7 +360,7 @@ class GerenciadorGraficos {
 
     // Atualizar gráfico de Corrente
     atualizarGraficoCorrente(analise) {
-        if (!analise) return;
+        if (!analise || !this.graficos.corrente) return;
 
         const correntes = [
             analise.fases.R.corrente,
@@ -307,8 +374,10 @@ class GerenciadorGraficos {
 
     // Atualizar gráfico de Queda de Tensão
     atualizarGraficoQuedaTensao(dadosQuadros) {
-        const circuitos = dadosQuadros.map(q => q.DESCRIÇÃO);
-        const quedas = dadosQuadros.map(q => q['QUEDA DE TENSÃO (%)']);
+        if (!this.graficos.quedaTensao) return;
+
+        const circuitos = dadosQuadros.map(q => q.DESCRICAO);
+        const quedas = dadosQuadros.map(q => q.QUEDA_TENSAO_PERC);
 
         // Limitar a 15 circuitos para melhor visualização
         const circuitosExibir = circuitos.slice(0, 15);
@@ -320,14 +389,17 @@ class GerenciadorGraficos {
         // Ajustar altura do gráfico baseado no número de circuitos
         const alturaBase = 250;
         const alturaAdicional = circuitosExibir.length * 20;
-        this.graficos.quedaTensao.canvas.parentNode.style.height = `${Math.max(alturaBase, alturaAdicional)}px`;
+        const parent = this.graficos.quedaTensao.canvas.parentNode;
+        if (parent) {
+            parent.style.height = Math.max(alturaBase, alturaAdicional) + 'px';
+        }
         
         this.graficos.quedaTensao.update();
     }
 
     // Atualizar gráfico de Subestação
     atualizarGraficoSubestacao(analise, dadosQuadros) {
-        if (!analise) return;
+        if (!analise || !this.graficos.subestacao) return;
 
         const subestacoes = [75, 112.5, 225, 300, 500, 750, 1000, 1250, 1500, 1750, 2000];
         const demandaKVA = analise.demandaKVA;
@@ -336,30 +408,14 @@ class GerenciadorGraficos {
         const subestacoesRelevantes = subestacoes.filter(s => s <= demandaKVA * 2 || s === analise.subestacaoRecomendada);
         
         // Adicionar a demanda calculada como um ponto especial
-        const labels = [...subestacoesRelevantes.map(s => `${s} kVA`), 'Sua Demanda'];
+        const labels = [...subestacoesRelevantes.map(s => s + ' kVA'), 'Sua Demanda'];
         const valoresSubestacoes = [...subestacoesRelevantes, null];
-        const valoresDemanda = [null, null, null, null, null, null, null, null, null, null, null, demandaKVA];
+        const valoresDemanda = new Array(subestacoesRelevantes.length).fill(null);
+        valoresDemanda.push(demandaKVA);
 
         this.graficos.subestacao.data.labels = labels;
         this.graficos.subestacao.data.datasets[0].data = valoresSubestacoes;
         this.graficos.subestacao.data.datasets[1].data = valoresDemanda;
-
-        // Adicionar linha de recomendação (simulação de annotation)
-        this.graficos.subestacao.options.plugins.annotation.annotations = {
-            linhaRecomendacao: {
-                type: 'line',
-                xMin: analise.subestacaoRecomendada,
-                xMax: analise.subestacaoRecomendada,
-                borderColor: this.cores.recomendado,
-                borderWidth: 2,
-                borderDash: [5, 5],
-                label: {
-                    content: `Recomendado: ${analise.subestacaoRecomendada} kVA`,
-                    enabled: true,
-                    position: 'end'
-                }
-            }
-        };
 
         this.graficos.subestacao.update();
     }
@@ -367,7 +423,7 @@ class GerenciadorGraficos {
     // Limpar todos os gráficos
     limparGraficos() {
         Object.values(this.graficos).forEach(grafico => {
-            if (grafico.data.datasets) {
+            if (grafico && grafico.data && grafico.data.datasets) {
                 grafico.data.datasets.forEach(dataset => {
                     dataset.data = [];
                 });
@@ -379,7 +435,8 @@ class GerenciadorGraficos {
 
     // Criar gráfico de pizza para distribuição de cargas
     criarGraficoDistribuicao(dadosQuadros, elementoId) {
-        const ctx = document.getElementById(elementoId).getContext('2d');
+        const ctx = document.getElementById(elementoId);
+        if (!ctx) return null;
         
         // Agrupar por tipo de circuito
         const tipos = {
@@ -389,14 +446,14 @@ class GerenciadorGraficos {
         };
 
         dadosQuadros.forEach(quadro => {
-            const fasesAtivas = [quadro['ATIVA-R'], quadro['ATIVA-S'], quadro['ATIVA-T']].filter(p => p > 0).length;
+            const fasesAtivas = [quadro.ATIVA_R, quadro.ATIVA_S, quadro.ATIVA_T].filter(p => p > 0).length;
             
-            if (fasesAtivas === 3) tipos['Trifásico'] += quadro['POT. TOTAL (W)'];
-            else if (fasesAtivas === 2) tipos['Bifásico'] += quadro['POT. TOTAL (W)'];
-            else tipos['Monofásico'] += quadro['POT. TOTAL (W)'];
+            if (fasesAtivas === 3) tipos['Trifásico'] += quadro.POT_TOTAL_W;
+            else if (fasesAtivas === 2) tipos['Bifásico'] += quadro.POT_TOTAL_W;
+            else tipos['Monofásico'] += quadro.POT_TOTAL_W;
         });
 
-        return new Chart(ctx, {
+        return new Chart(ctx.getContext('2d'), {
             type: 'pie',
             data: {
                 labels: Object.keys(tipos),
@@ -422,67 +479,8 @@ class GerenciadorGraficos {
                                 const value = context.parsed;
                                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                 const percentage = Math.round((value / total) * 100);
-                                return `${context.label}: ${(value/1000).toLocaleString('pt-BR')} kW (${percentage}%)`;
+                                return context.label + ': ' + (value/1000).toLocaleString('pt-BR') + ' kW (' + percentage + '%)';
                             }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    // Gráfico de evolução temporal (se houver dados de data)
-    criarGraficoEvolucao(dadosQuadros, elementoId) {
-        const ctx = document.getElementById(elementoId).getContext('2d');
-        
-        // Simular dados temporais se não existirem
-        const dadosComData = dadosQuadros.map((quadro, index) => ({
-            ...quadro,
-            data: new Date(Date.now() - (dadosQuadros.length - index - 1) * 86400000) // Dias anteriores
-        }));
-
-        const labels = dadosComData.map(d => 
-            d.data.toLocaleDateString('pt-BR')
-        );
-
-        const potencias = dadosComData.map(d => d['POT. TOTAL (W)'] / 1000);
-        const demandas = dadosComData.map(d => d['DEM. TOTAL (VA)'] / 1000);
-
-        return new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'Potência (kW)',
-                        data: potencias,
-                        borderColor: this.cores.potencia,
-                        backgroundColor: this.cores.potencia.replace('0.8', '0.1'),
-                        tension: 0.4
-                    },
-                    {
-                        label: 'Demanda (kVA)',
-                        data: demandas,
-                        borderColor: this.cores.demanda,
-                        backgroundColor: this.cores.demanda.replace('0.8', '0.1'),
-                        tension: 0.4
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Evolução das Cargas ao Longo do Tempo'
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'kW / kVA'
                         }
                     }
                 }
@@ -499,15 +497,9 @@ class GerenciadorGraficos {
         }
 
         const link = document.createElement('a');
-        link.download = `grafico_${nomeGrafico}.${formato}`;
+        link.download = 'grafico_' + nomeGrafico + '.' + formato;
         link.href = grafico.toBase64Image();
         link.click();
-    }
-
-    // Exportar todos os gráficos como ZIP
-    exportarTodosGraficos() {
-        // Esta função requer uma biblioteca adicional para ZIP
-        console.log('Funcionalidade de exportação ZIP requer biblioteca adicional');
     }
 }
 
