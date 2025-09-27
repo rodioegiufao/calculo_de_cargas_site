@@ -166,35 +166,37 @@ class DimensionamentoEletricoApp {
     }
 
     // Mostrar resultado do cálculo
+    // No método mostrarResultadoCalculo, ajuste a exibição:
     mostrarResultadoCalculo(resultado) {
         const card = document.getElementById('resultado-card');
         const content = document.getElementById('resultado-detailed');
-
+    
         if (!card || !content) return;
-
+    
+        // Adicionar "mm²" apenas para o terra, pois fase e neutro já indicam a bitola
         content.innerHTML = 
             '<div class="row">' +
                 '<div class="col-md-6">' +
                     '<h6>Informacoes Basicas</h6>' +
                     '<table class="table table-sm">' +
                         '<tr><td><strong>Quadro:</strong></td><td>' + resultado.DESCRICAO + '</td></tr>' +
-                        '<tr><td><strong>Potencia Total:</strong></td><td>' + resultado['POT_TOTAL_W'].toLocaleString() + ' W</td></tr>' +
-                        '<tr><td><strong>Demanda Total:</strong></td><td>' + resultado['DEM_TOTAL_VA'].toLocaleString() + ' VA</td></tr>' +
-                        '<tr><td><strong>Corrente Media:</strong></td><td>' + resultado['COR_MEDIA_A'].toFixed(2) + ' A</td></tr>' +
+                        '<tr><td><strong>Potencia Total:</strong></td><td>' + resultado.POT_TOTAL_W.toLocaleString() + ' W</td></tr>' +
+                        '<tr><td><strong>Demanda Total:</strong></td><td>' + resultado.DEM_TOTAL_VA.toLocaleString() + ' VA</td></tr>' +
+                        '<tr><td><strong>Corrente Media:</strong></td><td>' + resultado.COR_MEDIA_A.toFixed(2) + ' A</td></tr>' +
                     '</table>' +
                 '</div>' +
                 '<div class="col-md-6">' +
                     '<h6>Dimensionamento</h6>' +
                     '<table class="table table-sm">' +
-                        '<tr><td><strong>Condutor Fase:</strong></td><td>' + resultado.FA + '</td></tr>' +
-                        '<tr><td><strong>Condutor Neutro:</strong></td><td>' + resultado.NE + '</td></tr>' +
+                        '<tr><td><strong>Condutor Fase:</strong></td><td>' + resultado.FA + ' mm²</td></tr>' +
+                        '<tr><td><strong>Condutor Neutro:</strong></td><td>' + resultado.NE + ' mm²</td></tr>' +
                         '<tr><td><strong>Condutor Terra:</strong></td><td>' + resultado.TE + ' mm²</td></tr>' +
                         '<tr><td><strong>Disjuntor:</strong></td><td>' + resultado.DISJUNTOR + ' A</td></tr>' +
-                        '<tr><td><strong>Queda de Tensao:</strong></td><td>' + resultado['QUEDA_TENSAO_PERC'].toFixed(2) + '%</td></tr>' +
+                        '<tr><td><strong>Queda de Tensao:</strong></td><td>' + resultado.QUEDA_TENSAO_PERC.toFixed(2) + '%</td></tr>' +
                     '</table>' +
                 '</div>' +
             '</div>';
-
+    
         card.classList.remove('d-none');
     }
 
@@ -254,6 +256,7 @@ class DimensionamentoEletricoApp {
     }
 
     // Criar linha da tabela
+    // No método criarLinhaTabela, ajuste a exibição dos cabos:
     criarLinhaTabela(quadro, index) {
         return '' +
             '<tr>' +
@@ -277,9 +280,9 @@ class DimensionamentoEletricoApp {
                 '<td>' + quadro.COR_MEDIA_A.toFixed(2) + '</td>' +
                 '<td>' + quadro.DIST_M + '</td>' +
                 '<td>' + quadro.QUEDA_TENSAO_PERC.toFixed(2) + '</td>' +
-                '<td>' + quadro.FA + '</td>' +
-                '<td>' + quadro.NE + '</td>' +
-                '<td>' + quadro.TE + '</td>' +
+                '<td>' + quadro.FA + ' mm²</td>' + // Adicionado mm²
+                '<td>' + quadro.NE + ' mm²</td>' + // Adicionado mm²
+                '<td>' + quadro.TE + ' mm²</td>' + // Adicionado mm²
                 '<td>' + quadro.DISJUNTOR + '</td>' +
                 '<td>' +
                     '<button class="btn btn-sm btn-danger" onclick="app.excluirQuadro(' + index + ')">' +
@@ -468,3 +471,4 @@ class DimensionamentoEletricoApp {
 document.addEventListener('DOMContentLoaded', function() {
     window.app = new DimensionamentoEletricoApp();
 });
+
