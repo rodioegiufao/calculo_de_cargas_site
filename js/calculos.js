@@ -118,6 +118,7 @@ class CalculosEletricos {
     }
 
     // Dimensionar cabos considerando múltiplos cabos em paralelo
+    // No método dimensionarCabos do calculos.js, ajuste final:
     dimensionarCabos(c_med, qd) {
         let n = 0;
         let cabo = "";
@@ -134,17 +135,12 @@ class CalculosEletricos {
                 if (c_med < corrente_limite && queda_total < 3) {
                     queda = this.arredondarQueda(queda_total);
                     
-                    // Formatar a descrição do cabo
+                    // Formatar a descrição do cabo - SEM "1x" para um único cabo
                     if (n_cabos === 1) {
                         cabo = this.cb_voltenax_bitola[i].toString(); // Apenas o número
-                    } else {
-                        cabo = n_cabos + 'x' + this.cb_voltenax_bitola[i]; // Nx número
-                    }
-                    
-                    // Formatar a descrição do terra da mesma forma
-                    if (n_cabos === 1) {
                         terra = this.cb_voltenax_terra[i].toString(); // Apenas o número
                     } else {
+                        cabo = n_cabos + 'x' + this.cb_voltenax_bitola[i]; // Nx número
                         terra = n_cabos + 'x' + this.cb_voltenax_terra[i]; // Nx número
                     }
                     
@@ -162,6 +158,7 @@ class CalculosEletricos {
         
         return { cabo, terra, queda, n_cabos: 1 };
     }
+    
 
     // Dimensionar disjuntor
     dimensionarDisjuntor(c_med) {
@@ -382,4 +379,5 @@ function verificarConformidadeQuadro(dadosQuadro) {
     return calculadora.verificarConformidade(dadosQuadro);
 
 }
+
 
