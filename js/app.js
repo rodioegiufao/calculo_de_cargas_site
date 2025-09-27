@@ -257,7 +257,16 @@ class DimensionamentoEletricoApp {
 
     // Criar linha da tabela
     // No método criarLinhaTabela, ajuste a exibição dos cabos:
+    // No método criarLinhaTabela, vamos formatar corretamente a exibição dos cabos:
     criarLinhaTabela(quadro, index) {
+        // Função para formatar a exibição do cabo (remover "1x" se existir)
+        const formatarCabo = (valorCabo) => {
+            if (typeof valorCabo === 'string' && valorCabo.startsWith('1x')) {
+                return valorCabo.substring(2); // Remove o "1x"
+            }
+            return valorCabo;
+        };
+    
         return '' +
             '<tr>' +
                 '<td>' + quadro.N + '</td>' +
@@ -280,9 +289,9 @@ class DimensionamentoEletricoApp {
                 '<td>' + quadro.COR_MEDIA_A.toFixed(2) + '</td>' +
                 '<td>' + quadro.DIST_M + '</td>' +
                 '<td>' + quadro.QUEDA_TENSAO_PERC.toFixed(2) + '</td>' +
-                '<td>' + quadro.FA + ' mm²</td>' + // Adicionado mm²
-                '<td>' + quadro.NE + ' mm²</td>' + // Adicionado mm²
-                '<td>' + quadro.TE + ' mm²</td>' + // Adicionado mm²
+                '<td>' + formatarCabo(quadro.FA) + ' mm²</td>' + // Formatado
+                '<td>' + formatarCabo(quadro.NE) + ' mm²</td>' + // Formatado
+                '<td>' + formatarCabo(quadro.TE) + ' mm²</td>' + // Formatado
                 '<td>' + quadro.DISJUNTOR + '</td>' +
                 '<td>' +
                     '<button class="btn btn-sm btn-danger" onclick="app.excluirQuadro(' + index + ')">' +
@@ -471,4 +480,5 @@ class DimensionamentoEletricoApp {
 document.addEventListener('DOMContentLoaded', function() {
     window.app = new DimensionamentoEletricoApp();
 });
+
 
