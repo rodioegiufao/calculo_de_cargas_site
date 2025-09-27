@@ -124,7 +124,7 @@ class CalculosEletricos {
         let terra = "";
         let queda = 0;
         const max_cabos = 5;
-
+    
         // Tenta de 1 até max_cabos cabos em paralelo
         for (let n_cabos = 1; n_cabos <= max_cabos; n_cabos++) {
             for (let i = 0; i < this.cb_voltenax_corrente.length; i++) {
@@ -133,19 +133,32 @@ class CalculosEletricos {
                 
                 if (c_med < corrente_limite && queda_total < 3) {
                     queda = this.arredondarQueda(queda_total);
-                    cabo = `${n_cabos}x${this.cb_voltenax_bitola[i]}`;
-                    terra = this.cb_voltenax_terra[i];
+                    
+                    // Formatar a descrição do cabo
+                    if (n_cabos === 1) {
+                        cabo = this.cb_voltenax_bitola[i].toString(); // Apenas o número
+                    } else {
+                        cabo = n_cabos + 'x' + this.cb_voltenax_bitola[i]; // Nx número
+                    }
+                    
+                    // Formatar a descrição do terra da mesma forma
+                    if (n_cabos === 1) {
+                        terra = this.cb_voltenax_terra[i].toString(); // Apenas o número
+                    } else {
+                        terra = n_cabos + 'x' + this.cb_voltenax_terra[i]; // Nx número
+                    }
+                    
                     n = n_cabos;
                     return { cabo, terra, queda, n_cabos: n };
                 }
             }
         }
-
+    
         // Se não encontrou solução, usar o maior cabo disponível
         const ultimoIndex = this.cb_voltenax_corrente.length - 1;
         queda = this.arredondarQueda(qd[ultimoIndex]);
-        cabo = `1x${this.cb_voltenax_bitola[ultimoIndex]}`;
-        terra = this.cb_voltenax_terra[ultimoIndex];
+        cabo = this.cb_voltenax_bitola[ultimoIndex].toString(); // Apenas o número
+        terra = this.cb_voltenax_terra[ultimoIndex].toString(); // Apenas o número
         
         return { cabo, terra, queda, n_cabos: 1 };
     }
@@ -369,3 +382,4 @@ function verificarConformidadeQuadro(dadosQuadro) {
     return calculadora.verificarConformidade(dadosQuadro);
 
 }
+
