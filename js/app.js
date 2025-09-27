@@ -167,13 +167,21 @@ class DimensionamentoEletricoApp {
 
     // Mostrar resultado do cálculo
     // No método mostrarResultadoCalculo, ajuste a exibição:
+    // No método mostrarResultadoCalculo do app.js:
     mostrarResultadoCalculo(resultado) {
         const card = document.getElementById('resultado-card');
         const content = document.getElementById('resultado-detailed');
     
         if (!card || !content) return;
     
-        // Adicionar "mm²" apenas para o terra, pois fase e neutro já indicam a bitola
+        // Função para formatar a exibição do cabo
+        const formatarCabo = (valorCabo) => {
+            if (typeof valorCabo === 'string' && valorCabo.startsWith('1x')) {
+                return valorCabo.substring(2); // Remove o "1x"
+            }
+            return valorCabo;
+        };
+    
         content.innerHTML = 
             '<div class="row">' +
                 '<div class="col-md-6">' +
@@ -188,9 +196,9 @@ class DimensionamentoEletricoApp {
                 '<div class="col-md-6">' +
                     '<h6>Dimensionamento</h6>' +
                     '<table class="table table-sm">' +
-                        '<tr><td><strong>Condutor Fase:</strong></td><td>' + resultado.FA + ' mm²</td></tr>' +
-                        '<tr><td><strong>Condutor Neutro:</strong></td><td>' + resultado.NE + ' mm²</td></tr>' +
-                        '<tr><td><strong>Condutor Terra:</strong></td><td>' + resultado.TE + ' mm²</td></tr>' +
+                        '<tr><td><strong>Condutor Fase:</strong></td><td>' + formatarCabo(resultado.FA) + ' mm²</td></tr>' +
+                        '<tr><td><strong>Condutor Neutro:</strong></td><td>' + formatarCabo(resultado.NE) + ' mm²</td></tr>' +
+                        '<tr><td><strong>Condutor Terra:</strong></td><td>' + formatarCabo(resultado.TE) + ' mm²</td></tr>' +
                         '<tr><td><strong>Disjuntor:</strong></td><td>' + resultado.DISJUNTOR + ' A</td></tr>' +
                         '<tr><td><strong>Queda de Tensao:</strong></td><td>' + resultado.QUEDA_TENSAO_PERC.toFixed(2) + '%</td></tr>' +
                     '</table>' +
@@ -480,5 +488,6 @@ class DimensionamentoEletricoApp {
 document.addEventListener('DOMContentLoaded', function() {
     window.app = new DimensionamentoEletricoApp();
 });
+
 
 
