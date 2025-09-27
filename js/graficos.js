@@ -281,6 +281,7 @@ class GerenciadorGraficos {
     }
 
     // Gráfico de Dimensionamento da Subestação
+    // No método criarGraficoSubestacao, ajuste para a nova versão:
     criarGraficoSubestacao() {
         const ctx = document.getElementById('substationChart');
         if (!ctx) return;
@@ -289,47 +290,37 @@ class GerenciadorGraficos {
             type: 'bar',
             data: {
                 labels: [],
-                datasets: [
-                    {
-                        label: 'Capacidades Disponíveis (kVA)',
-                        data: [],
-                        backgroundColor: this.cores.potencia,
-                        borderColor: this.cores.potencia.replace('0.8', '1'),
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Demanda Calculada (kVA)',
-                        data: [],
-                        backgroundColor: this.cores.demanda,
-                        borderColor: this.cores.demanda.replace('0.8', '1'),
-                        borderWidth: 2,
-                        borderDash: [5, 5]
-                    }
-                ]
+                datasets: [{
+                    label: 'Valor (kVA)',
+                    data: [],
+                    backgroundColor: this.cores.demanda,
+                    borderColor: this.cores.demanda.replace('0.8', '1'),
+                    borderWidth: 2
+                }]
             },
             options: {
-                indexAxis: 'y',
+                indexAxis: 'x', // Mudou para vertical
                 responsive: true,
                 plugins: {
                     title: {
                         display: true,
-                        text: 'Demanda Calculada vs Capacidades de Subestação',
+                        text: 'Dimensionamento da Subestação',
                         font: { size: 14 }
                     },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return context.dataset.label + ': ' + context.parsed.x.toLocaleString('pt-BR') + ' kVA';
+                                return context.dataset.label + ': ' + context.parsed.y.toLocaleString('pt-BR') + ' kVA';
                             }
                         }
                     }
                 },
                 scales: {
-                    x: {
+                    y: {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Capacidade (kVA)'
+                            text: 'kVA'
                         }
                     }
                 }
@@ -398,25 +389,36 @@ class GerenciadorGraficos {
     }
 
     // Atualizar gráfico de Subestação
+    // Atualizar gráfico de Subestação - Versão comparativa prática
     atualizarGraficoSubestacao(analise, dadosQuadros) {
         if (!analise || !this.graficos.subestacao) return;
-
-        const subestacoes = [75, 112.5, 225, 300, 500, 750, 1000, 1250, 1500, 1750, 2000];
+    
         const demandaKVA = analise.demandaKVA;
-
-        // Filtrar subestações relevantes (até 2x a demanda)
-        const subestacoesRelevantes = subestacoes.filter(s => s <= demandaKVA * 2 || s === analise.subestacaoRecomendada);
+        const subestacaoRecomendada = analise.subestacaoRecomendada;
         
-        // Adicionar a demanda calculada como um ponto especial
-        const labels = [...subestacoesRelevantes.map(s => s + ' kVA'), 'Sua Demanda'];
-        const valoresSubestacoes = [...subestacoesRelevantes, null];
-        const valoresDemanda = new Array(subestacoesRelevantes.length).fill(null);
-        valoresDemanda.push(demandaKVA);
-
+        // Mostrar: Demanda calculada vs Subestação recomendada
+        const labels = ['Sua Demanda', 'Subestação Recomendada'];
+        const valores = [demandaKVA, subestacaoRecomendada];
+        const cores = [this.cores.demanda, this.cores.recomendado];
+    
+        // Mudar para um gráfico de barras vertical simples
         this.graficos.subestacao.data.labels = labels;
-        this.graficos.subestacao.data.datasets[0].data = valoresSubestacoes;
-        this.graficos.subestacao.data.datasets[1].data = valoresDemanda;
-
+        this.graficos.subestacao.data.datasets = [{
+            label: 'Valor (kVA)',
+            data: valores,
+            backgroundColor: cores,
+            borderColor: cores.map(cor => cor.replace('0.8', '1')),
+            borderWidth: 2
+        }];
+    
+        // Mudar para vertical
+        this.graficos.subestacao.options.indexAxis = 'x';
+        this.graficos.subestacao.options.scales.x.title.text = '';
+        this.graficos.subestacao.options.scales.y.title.text = 'kVA';
+    
+        this.graficos.subestacao.options.plugins.title.text = 
+            'Comparação: Demanda vs Subestação Recomendada';
+    
         this.graficos.subestacao.update();
     }
 
@@ -523,3 +525,4 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 100);
 });
+
