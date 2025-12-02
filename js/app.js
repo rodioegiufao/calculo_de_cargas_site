@@ -84,6 +84,13 @@ class DimensionamentoEletricoApp {
                 this.atualizarVisualizacoes();
             });
         }
+        // Adicionar evento para o botão de limpar
+        const limparCamposBtn = document.getElementById('limpar-campos');
+        if (limparCamposBtn) {
+            limparCamposBtn.addEventListener('click', () => {
+                this.limparFormularioCompleto();
+            });
+        }
     }
 
     // Processar cálculo do formulário
@@ -119,7 +126,7 @@ class DimensionamentoEletricoApp {
         if (this.salvarDados()) {
             this.mostrarNotificacao('Calculo realizado e salvo com sucesso!', 'success');
             this.mostrarResultadoCalculo(resultado);
-            this.limparFormulario();
+            //this.limparFormulario();
             this.atualizarInterface();
         }
     }
@@ -208,17 +215,13 @@ class DimensionamentoEletricoApp {
         card.classList.remove('d-none');
     }
 
-    // Limpar formulário
-    limparFormulario() {
+    // Método para limpar tudo (apenas quando solicitado)
+    limparFormularioCompleto() {
         const form = document.getElementById('form-calculo');
         if (form) {
             form.reset();
         }
-        document.getElementById('potencia-r').value = '';
-        document.getElementById('potencia-s').value = '';
-        document.getElementById('potencia-t').value = '';
     }
-
     // Atualizar interface completa
     atualizarInterface() {
         this.atualizarAbaVisualizacao();
@@ -488,6 +491,7 @@ class DimensionamentoEletricoApp {
 document.addEventListener('DOMContentLoaded', function() {
     window.app = new DimensionamentoEletricoApp();
 });
+
 
 
 
