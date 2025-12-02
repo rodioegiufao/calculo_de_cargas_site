@@ -178,12 +178,16 @@ class CalculosEletricos {
 
     // Calcular demanda individual
     calcularDemanda(potencia, fd) {
-        return potencia * fd;
+        const demanda = potencia * fd;
+        // Arredondar para 2 casas decimais
+        return Math.round(demanda * 100) / 100;
     }
 
     // Calcular demanda total
     calcularDemandaTotal(potenciaTotal, fd, fp) {
-        return (potenciaTotal * fd) / fp;
+        const demandatotal = (potenciaTotal * fd) / fp;
+        // Arredondar para 2 casas decimais
+        return Math.round(demandatotal * 100) / 100;
     }
 
     // Gerar número sequencial do QD
@@ -379,5 +383,6 @@ function verificarConformidadeQuadro(dadosQuadro) {
     return calculadora.verificarConformidade(dadosQuadro);
 
 }
+
 
 
