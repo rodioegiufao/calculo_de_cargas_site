@@ -62,13 +62,15 @@ class CalculosEletricos {
         const disjuntor = this.dimensionarDisjuntor(c_med);
         
         // Calcular tensão de linha
-        const tensao_linha = tensao === 220 ? 127 : 220;
+        const tensao_fase = tensao === 220 ? 127 : 220; // Se entrada é 220V, fase é 127V
+        const tensao_linha = tensao; // A entrada já é a tensão de linha
         
         // Gerar número do QD
         const qd_number = this.gerarNumeroQD();
         
         // Retornar dados no formato correto (igual ao Python)
         // No calculos.js, altere o retorno da função calcularDimensionamento:
+        // No retorno, ajuste:
         return {
             "N": `QD-${qd_number}`,
             "DESCRICAO": nomeQuadro,
@@ -83,8 +85,8 @@ class CalculosEletricos {
             "T": this.arredondarCorrente(c_qds[2]),
             "FP": fp,
             "FD": fd,
-            "TENSAO_FASE_V": tensao,
-            "TENSAO_LINHA_V": tensao_linha,
+            "TENSAO_FASE_V": tensao_fase, // <-- Agora é fase-neutro
+            "TENSAO_LINHA_V": tensao_linha, // <-- Agora é fase-fase (entrada do usuário)
             "POT_TOTAL_W": sum_pot,
             "DEM_TOTAL_VA": this.calcularDemandaTotal(sum_pot, fd, fp),
             "COR_MEDIA_A": this.arredondarCorrente(c_med),
@@ -383,6 +385,7 @@ function verificarConformidadeQuadro(dadosQuadro) {
     return calculadora.verificarConformidade(dadosQuadro);
 
 }
+
 
 
 
