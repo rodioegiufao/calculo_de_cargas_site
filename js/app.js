@@ -363,26 +363,265 @@ class DimensionamentoEletricoApp {
         if (recommendedSub) recommendedSub.textContent = subestacaoRecomendada + ' kVA';
     }
 
-    // Exportar para Excel
+    // app.js - Substitua a função exportarParaExcel()
     exportarParaExcel() {
         if (this.dadosQuadros.length === 0) {
             this.mostrarNotificacao('Nenhum dado para exportar.', 'warning');
             return;
         }
-
+    
         try {
-            // Converter dados para formato de planilha
-            const ws = XLSX.utils.json_to_sheet(this.dadosQuadros);
+            // Criar workbook
             const wb = XLSX.utils.book_new();
+            
+            // Preparar dados no formato da planilha melhorada
+            const wsData = this.prepararDadosExcelFormatado();
+            
+            // Converter para worksheet
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            
+            // Aplicar formatação (largura de colunas, bordas, etc.)
+            this.aplicarFormatacaoExcel(ws, wsData);
+            
+            // Adicionar worksheet ao workbook
             XLSX.utils.book_append_sheet(wb, ws, "Quadros_de_Carga");
             
             // Gerar e baixar arquivo
-            XLSX.writeFile(wb, "quadros_de_carga.xlsx");
-            this.mostrarNotificacao('Arquivo Excel gerado com sucesso!', 'success');
+            const fileName = `quadro_de_cargas_${new Date().toISOString().slice(0,10)}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+            
+            this.mostrarNotificacao('Arquivo Excel formatado gerado com sucesso!', 'success');
         } catch (error) {
             console.error('Erro ao exportar para Excel:', error);
             this.mostrarNotificacao('Erro ao gerar arquivo Excel.', 'error');
         }
+    }
+    
+    // Novo método para preparar dados no formato melhorado
+    prepararDadosExcelFormatado() {
+        const dadosQuadros = this.dadosQuadros;
+        
+        // Cabeçalho completo (igual ao seu modelo melhorado)
+        const cabecalho = [
+            // Linha 1: Títulos principais
+            [
+                "N", "DESCRICAO", 
+                "POTÊNCIA (W)", "", "", 
+                "DEMANDA (W)", "", "", 
+                "CORRENTE (A)", "", "", 
+                "FP", "FD", 
+                "TENSAO DE FASE (V)", "TENSAO DE LINHA (V)", 
+                "POTÊNCIA TOTAL (W)", "DEMANDA TOTAL (VA)", "CORRENTE MÉDIA (A)", 
+                "DISTÂNCIA (M)", "QUEDA DE TENSAO (%)", 
+                "CABOS", "", "", "DISJUNTOR"
+            ],
+            
+            // Linha 2: Subtítulos
+            [
+                "", "",
+                "R", "S", "T",          // Potência por fase
+                "R", "S", "T",          // Demanda por fase
+                "R", "S", "T",          // Corrente por fase
+                "", "",                 // FP e FD
+                "", "",                 // Tensões
+                "", "", "",             // Totais
+                "", "",                 // Distância e Queda
+                "F", "N", "T",          // Cabos
+                ""                      // Disjuntor
+            ]
+        ];
+        
+        // Dados dos quadros
+        const linhasDados = dadosQuadros.map(quadro => {
+            // Função para formatar números
+            const formatarNum = (valor, casas = 2) => {
+                if (valor === null || valor === undefined) return '0.00';
+                const fator = Math.pow(10, casas);
+                const arredondado = Math.round(valor * fator) / fator;
+                
+                // Para valores inteiros (como potências), mostrar sem decimais
+                if (casas === 0) {
+                    return arredondado.toString();
+                }
+                
+                // Formatar com ponto decimal
+                return arredondado.toFixed(casas);
+            };
+            
+            // Função para formatar cabos (remover "1x" se existir)
+            const formatarCabo = (valorCabo) => {
+                if (typeof valorCabo === 'string' && valorCabo.startsWith('1x')) {
+                    return valorCabo.substring(2);
+                }
+                return valorCabo;
+            };
+            
+            return [
+                quadro.N || `QD-${quadro.N}`,
+                quadro.DESCRICAO,
+                
+                // Potências por fase (sem casas decimais)
+                formatarNum(quadro.ATIVA_R, 0),
+                formatarNum(quadro.ATIVA_S, 0),
+                formatarNum(quadro.ATIVA_T, 0),
+                
+                // Demandas por fase (2 casas decimais)
+                formatarNum(quadro.DEM_R, 2),
+                formatarNum(quadro.DEM_S, 2),
+                formatarNum(quadro.DEM_T, 2),
+                
+                // Correntes por fase (2 casas decimais)
+                formatarNum(quadro.R, 2),
+                formatarNum(quadro.S, 2),
+                formatarNum(quadro.T, 2),
+                
+                // FP e FD
+                quadro.FP,
+                quadro.FD,
+                
+                // Tensões (sem decimais)
+                quadro.TENSAO_FASE_V || 127,
+                quadro.TENSAO_LINHA_V || 220,
+                
+                // Totais
+                formatarNum(quadro.POT_TOTAL_W, 0),
+                formatarNum(quadro.DEM_TOTAL_VA, 2),
+                formatarNum(quadro.COR_MEDIA_A, 2),
+                
+                // Distância (1 decimal) e Queda (2 decimais)
+                formatarNum(quadro.DIST_M, 1),
+                formatarNum(quadro.QUEDA_TENSAO_PERC, 2),
+                
+                // Cabos
+                formatarCabo(quadro.FA),
+                formatarCabo(quadro.NE),
+                formatarCabo(quadro.TE),
+                
+                // Disjuntor
+                quadro.DISJUNTOR
+            ];
+        });
+        
+        // Juntar cabeçalho e dados
+        return [...cabecalho, ...linhasDados];
+    }
+    
+    // Método para aplicar formatação ao Excel
+    aplicarFormatacaoExcel(ws, wsData) {
+        // Definir largura das colunas
+        const colWidths = [
+            { wch: 8 },    // N
+            { wch: 25 },   // DESCRICAO
+            { wch: 12 },   // POTÊNCIA R
+            { wch: 12 },   // POTÊNCIA S
+            { wch: 12 },   // POTÊNCIA T
+            { wch: 12 },   // DEMANDA R
+            { wch: 12 },   // DEMANDA S
+            { wch: 12 },   // DEMANDA T
+            { wch: 10 },   // CORRENTE R
+            { wch: 10 },   // CORRENTE S
+            { wch: 10 },   // CORRENTE T
+            { wch: 8 },    // FP
+            { wch: 8 },    // FD
+            { wch: 15 },   // TENSAO FASE
+            { wch: 15 },   // TENSAO LINHA
+            { wch: 15 },   // POTÊNCIA TOTAL
+            { wch: 15 },   // DEMANDA TOTAL
+            { wch: 15 },   // CORRENTE MÉDIA
+            { wch: 12 },   // DISTÂNCIA
+            { wch: 15 },   // QUEDA
+            { wch: 8 },    // CABO F
+            { wch: 8 },    // CABO N
+            { wch: 8 },    // CABO T
+            { wch: 10 }    // DISJUNTOR
+        ];
+        
+        ws['!cols'] = colWidths;
+        
+        // Definir range para mesclar células do cabeçalho
+        ws['!merges'] = [
+            // Mesclar "POTÊNCIA (W)" sobre R, S, T
+            { s: { r: 0, c: 2 }, e: { r: 0, c: 4 } },
+            
+            // Mesclar "DEMANDA (W)" sobre R, S, T
+            { s: { r: 0, c: 5 }, e: { r: 0, c: 7 } },
+            
+            // Mesclar "CORRENTE (A)" sobre R, S, T
+            { s: { r: 0, c: 8 }, e: { r: 0, c: 10 } },
+            
+            // Mesclar "CABOS" sobre F, N, T
+            { s: { r: 0, c: 20 }, e: { r: 0, c: 22 } }
+        ];
+        
+        // Aplicar estilos às células
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        
+        // Estilo para cabeçalho principal (linha 0)
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
+            if (!ws[cellAddress]) continue;
+            
+            ws[cellAddress].s = {
+                font: { bold: true, sz: 11 },
+                alignment: { horizontal: 'center', vertical: 'center' },
+                fill: { fgColor: { rgb: "D9E1F2" } }, // Azul claro
+                border: {
+                    top: { style: 'thin', color: { rgb: "000000" } },
+                    bottom: { style: 'thin', color: { rgb: "000000" } },
+                    left: { style: 'thin', color: { rgb: "000000" } },
+                    right: { style: 'thin', color: { rgb: "000000" } }
+                }
+            };
+        }
+        
+        // Estilo para subtítulos (linha 1)
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cellAddress = XLSX.utils.encode_cell({ r: 1, c: C });
+            if (!ws[cellAddress]) continue;
+            
+            ws[cellAddress].s = {
+                font: { bold: true, sz: 10 },
+                alignment: { horizontal: 'center', vertical: 'center' },
+                fill: { fgColor: { rgb: "E2EFDA" } }, // Verde claro
+                border: {
+                    top: { style: 'thin', color: { rgb: "000000" } },
+                    bottom: { style: 'thin', color: { rgb: "000000" } },
+                    left: { style: 'thin', color: { rgb: "000000" } },
+                    right: { style: 'thin', color: { rgb: "000000" } }
+                }
+            };
+        }
+        
+        // Estilo para dados (a partir da linha 2)
+        for (let R = 2; R <= range.e.r; ++R) {
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                if (!ws[cellAddress]) continue;
+                
+                // Cor de fundo alternada para melhor leitura
+                const fillColor = R % 2 === 0 ? "FFFFFF" : "F8F8F8";
+                
+                // Alinhamento baseado no tipo de dado
+                const alignment = (C >= 2 && C <= 4) || C >= 15 ? 
+                    { horizontal: 'right', vertical: 'center' } : 
+                    { horizontal: 'center', vertical: 'center' };
+                
+                ws[cellAddress].s = {
+                    font: { sz: 10 },
+                    alignment: alignment,
+                    fill: { fgColor: { rgb: fillColor } },
+                    border: {
+                        top: { style: 'thin', color: { rgb: "CCCCCC" } },
+                        bottom: { style: 'thin', color: { rgb: "CCCCCC" } },
+                        left: { style: 'thin', color: { rgb: "CCCCCC" } },
+                        right: { style: 'thin', color: { rgb: "CCCCCC" } }
+                    }
+                };
+            }
+        }
+        
+        // Congelar painel (cabeçalho fixo)
+        ws['!freeze'] = { xSplit: 0, ySplit: 2, topLeftCell: "A3", activePane: "bottomRight" };
     }
 
     // Excluir quadro selecionado
@@ -491,6 +730,7 @@ class DimensionamentoEletricoApp {
 document.addEventListener('DOMContentLoaded', function() {
     window.app = new DimensionamentoEletricoApp();
 });
+
 
 
 
